@@ -1,6 +1,9 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import { AdalService } from "adal-angular4";
 import { HttpClient } from "@angular/common/http";
+import { catchError, map } from "rxjs/operators";
+import { of } from "rxjs";
+import { HomeService } from "./home.service";
 
 @Component({
   selector: "app-home",
@@ -12,8 +15,15 @@ export class HomeComponent implements OnInit {
   profile: any;
   dataSource = [];
   displayedColumns: string[] = ["id", "name"];
+  @ViewChild("fileUpload") fileUpload: ElementRef;
+  files = [];
+  isLoading: boolean = true;
 
-  constructor(private adalService: AdalService, protected http: HttpClient) {}
+  constructor(
+    private adalService: AdalService,
+    protected http: HttpClient,
+    protected homeService: HomeService
+  ) {}
 
   ngOnInit() {
     this.user = this.adalService.userInfo;
@@ -43,5 +53,36 @@ export class HomeComponent implements OnInit {
         this.profile = result;
       },
     });
+  }
+
+  uploadFile(file) {
+    const formData = new FormData();
+    formData.append("image", file.data);
+    // this.isLoading = true;
+    this.homeService.upload(formData).subscribe({
+      next: (result) => {
+        if (result["statusCode"] == 200) {
+          console.log("Upload Successfull");
+        } else {
+          console.log("Upload Fail");
+        }
+      },
+    });
+  }
+  private uploadFiles() {
+    this.fileUpload.nativeElement.value = "";
+    this.uploadFile(this.files[0]);
+  }
+
+  onClick() {
+    const fileUpload = this.fileUpload.nativeElement;
+    fileUpload.onchange = () => {
+      for (let index = 0; index < fileUpload.files.length; index++) {
+        const file = fileUpload.files[index];
+        this.files.push({ data: file, inProgress: false, progress: 0 });
+      }
+      this.uploadFiles();
+    };
+    fileUpload.click();
   }
 }
