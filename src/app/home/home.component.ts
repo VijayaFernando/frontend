@@ -38,7 +38,7 @@ export class HomeComponent implements OnInit {
   }
 
   getUserInfo() {
-    return this.http.get("https://service-01.azurewebsites.net/users");
+    return this.http.get("https://vijayafrontdoor.azurefd.net/users");
   }
 
   public getProfile() {
